@@ -1,4 +1,4 @@
-package com.FinTrace.smartWallet.config;
+package com.FinTrace.smartWallet.CustomerService.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springframework.context.annotation.Bean;
@@ -12,8 +12,8 @@ public class SwaggerConfig {
     public OpenAPI SwalletOpenAPI() {
         return new OpenAPI()
                 .info(new io.swagger.v3.oas.models.info.Info()
-                        .title("Smart Wallet API")
-                        .description("API documentation for Smart Wallet application")
+                        .title("CRM API")
+                        .description("API documentation for SWallet Customer application")
                         .version("v1.0"));
     }
 }
