@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.sql.SQLOutput;
 import java.util.List;
 import java.util.Scanner;
 
@@ -38,7 +37,8 @@ public class ConsoleInterface {
             System.out.println("3. Add a new customer");
             System.out.println("4. Update a customer");
             System.out.println("5. Delete a customer");
-            System.out.println("6. Exit");
+            System.out.println("6. Find a customer by Name");
+            System.out.println("0. Exit");
             System.out.println("Enter your choice: ");
 
             int choice = Integer.parseInt(scanner.nextLine());
@@ -49,12 +49,24 @@ public class ConsoleInterface {
                 case 3 -> addCustomer();
                 case 4 -> updateCustomer();
                 case 5 -> deleteCustomer();
-                case 6 -> {
+                case 6 -> findCustomerByName();
+                case 0 -> {
                     System.out.println("Exiting...");
                     return;
                 }
                 default -> System.out.println("Invalid choice. Please try again.");
             }
+        }
+    }
+
+    private void findCustomerByName() {
+        System.out.println("Enter customer name: ");
+        String name = scanner.nextLine();
+        List<CustomerDto> customers = customerFacade.getCustomersByName(name);
+        if (customers.isEmpty()) {
+            System.out.println("No customers found with the name: " + name);
+        } else {
+            customers.forEach(this::printJsonObject);
         }
     }
 

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class CustomerFacade {
@@ -38,12 +39,20 @@ public class CustomerFacade {
     }
 
     public CustomerDto getCustomerById(Long id) {
-        Customer customerById = customerService.getCustomerById(id);
-        return customerById != null ? mapper.toDto(customerById) : null;
+        Optional<Customer> customerById = customerService.getCustomerById(id);
+        return customerById.map(mapper::toDto)
+                .orElse(null);
     }
 
     public List<CustomerDto> getAllCustomers() {
         return customerService.getAllCustomers()
+                .stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    public List<CustomerDto> getCustomersByName(String name) {
+        return customerService.findByName(name)
                 .stream()
                 .map(mapper::toDto)
                 .toList();

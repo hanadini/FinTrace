@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -20,24 +21,23 @@ public class CustomerInMemoryDao implements CustomerDao {
     }
 
     public Customer save(Customer customer) {
-        long id = currentId.incrementAndGet();
-        customer.setId(id);
-        customers.put(id, customer);
+        if(!existsById(customer.getId())) {
+            Long id = currentId.incrementAndGet();
+            customer.setId(id);
+        }
+        customers.put(customer.getId(), customer);
         return customer;
     }
 
-    public Customer update(Long id, Customer customer) {
-        customer.setId(id);
-        customers.put(id, customer);
-        return customer;
+    public void deleteById(Long id) {
+        customers.remove(id);
     }
 
-    public boolean delete(Long id) {
-        return customers.remove(id) != null;
-    }
-
-    public Customer findById(Long id) {
-        return customers.get(id);
+    public Optional<Customer> findById(Long id) {
+        if (!existsById(id)) {
+            return Optional.empty();
+        }
+        return Optional.of(customers.get(id));
     }
 
     public List<Customer> findAll() {
@@ -45,6 +45,16 @@ public class CustomerInMemoryDao implements CustomerDao {
     }
 
     public boolean existsById(Long id) {
+        if (id == null) {
+            return false;
+        }
         return customers.containsKey(id);
+    }
+
+    @Override
+    public List<Customer> findByNameIgnoreCase(String name) {
+        return customers.values().stream()
+                .filter(c -> c.getName() != null && c.getName().equalsIgnoreCase(name))
+                .toList();
     }
 }

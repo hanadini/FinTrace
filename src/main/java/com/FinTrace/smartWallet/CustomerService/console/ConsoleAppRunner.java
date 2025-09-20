@@ -7,11 +7,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Profile("console")
-public class ConoleAppRunner implements CommandLineRunner {
+public class ConsoleAppRunner implements CommandLineRunner {
 
     private final ConsoleInterface consoleInterface;
     @Autowired
-    public ConoleAppRunner(ConsoleInterface consoleInterface) {
+    public ConsoleAppRunner(ConsoleInterface consoleInterface) {
         this.consoleInterface = consoleInterface;
     }
 

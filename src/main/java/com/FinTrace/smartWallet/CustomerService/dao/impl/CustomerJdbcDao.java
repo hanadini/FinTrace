@@ -16,22 +16,32 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 @Primary
-@Profile("h2")
-public class CustomerH2Dao implements CustomerDao {
+@Profile("jdbc")
+public class CustomerJdbcDao implements CustomerDao {
 
     private final JdbcTemplate jdbc;
 
     @Autowired
-    public CustomerH2Dao(JdbcTemplate jdbc) {
+    public CustomerJdbcDao(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
     }
 
     public Customer save(Customer customer) {
+        if (existsById(customer.getId())) {
+            return update(customer);
+        } else {
+            return insert(customer);
+        }
+    }
+
+    public Customer insert(Customer customer) {
         String customerSql = "INSERT INTO customer (name, phone_number, type) VALUES (?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
+
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(customerSql, new String[]{"id"});
             ps.setString(1, customer.getName());
@@ -47,34 +57,36 @@ public class CustomerH2Dao implements CustomerDao {
             String realCustomerSql = "INSERT INTO real_customer (id, family) VALUES (?, ?)";
             jdbc.update(realCustomerSql, id, realCustomer.getFamily());
         } else if (customer instanceof LegalCustomer legalCustomer) {
-            String legalCustomerSql = "INSERT INTO legal_customer (id, fax) VALUES (?, ?)";
-            jdbc.update(legalCustomerSql, id, legalCustomer.getBusinessAddress());
+            String legalCustomerSql = "INSERT INTO legal_customer (id, email, businnes_address) VALUES (?, ?, ?)";
+            jdbc.update(legalCustomerSql, id, legalCustomer.getEmail(), legalCustomer.getBusinessAddress());
         }
 
         return customer;
     }
 
-    public Customer update(Long id, Customer customer) {
+    public Customer update(Customer customer) {
         String customerSql = "UPDATE customer SET name = ?, phone_number = ?, type = ? WHERE id = ?";
-        jdbc.update(customerSql, customer.getName(), customer.getPhoneNumber(), customer.getType().name(), id);
+        jdbc.update(customerSql, customer.getName(), customer.getPhoneNumber(), customer.getType().name(), customer.getId());
 
         if (customer instanceof RealCustomer realCustomer) {
             String realCustomerSql = "UPDATE real_customer SET family = ? WHERE id = ?";
-            jdbc.update(realCustomerSql, realCustomer.getFamily(), id);
+            jdbc.update(realCustomerSql, realCustomer.getFamily(), customer.getId());
         } else if (customer instanceof LegalCustomer legalCustomer) {
             String legalCustomerSql = "UPDATE legal_customer SET fax = ? WHERE id = ?";
-            jdbc.update(legalCustomerSql, legalCustomer.getBusinessAddress(), id);
+            jdbc.update(legalCustomerSql, legalCustomer.getBusinessAddress(), customer.getId());
         }
-
         return customer;
     }
 
-    public boolean delete(Long id) {
+    public void deleteById(Long id) {
         String customerSql = "DELETE FROM customer WHERE id = ?";
-        return jdbc.update(customerSql, id) > 0;
+        jdbc.update(customerSql, id);
     }
 
-    public Customer findById(Long id) {
+    public Optional<Customer> findById(Long id) {
+        if(!existsById(id)) {
+            return Optional.empty();
+        }
         String customerSql = "SELECT * FROM customer WHERE id = ?";
         Map<String, Object> customerRow = jdbc.queryForMap(customerSql, id);
 
@@ -104,7 +116,7 @@ public class CustomerH2Dao implements CustomerDao {
                     .build();
         }
 
-        return customer;
+        return Optional.of(customer);
     }
 
     public List<Customer> findAll() {
@@ -141,6 +153,39 @@ public class CustomerH2Dao implements CustomerDao {
         String customerSql = "SELECT COUNT(*) FROM customer WHERE id = ?";
         Integer count = jdbc.queryForObject(customerSql, Integer.class, id);
         return count != null && count > 0;
+    }
+
+    @Override
+    public List<Customer> findByNameIgnoreCase(String name) {
+        String customerSql = "SELECT * FROM customer WHERE LOWER(name) = LOWER(?)";
+        return jdbc.query(customerSql, new Object[]{name}, (rs, rowNum) -> {
+            Long id = rs.getLong("id");
+            CustomerType type = CustomerType.valueOf(rs.getString("type"));
+
+            if (type == CustomerType.REAL) {
+                String realCustomerSql = "SELECT * FROM real_customer WHERE id = ?";
+                Map<String, Object> realCustomerRow = jdbc.queryForMap(realCustomerSql, id);
+                return RealCustomer.builder()
+                        .id(id)
+                        .name(rs.getString("name"))
+                        .phoneNumber(rs.getString("phone_number"))
+                        .type(type)
+                        .family((String) realCustomerRow.get("family"))
+                        .email( (String) realCustomerRow.get("email"))
+                        .build();
+            } else {
+                String legalCustomerSql = "SELECT * FROM legal_customer WHERE id = ?";
+                Map<String, Object> legalCustomerRow = jdbc.queryForMap(legalCustomerSql, id);
+                return LegalCustomer.builder()
+                        .id(id)
+                        .name(rs.getString("name"))
+                        .phoneNumber(rs.getString("phone_number"))
+                        .type(type)
+                        .businessAddress((String) legalCustomerRow.get("businnes_address"))
+                        .email( (String) legalCustomerRow.get("email"))
+                        .build();
+            }
+        });
     }
 }
 

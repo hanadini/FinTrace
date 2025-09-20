@@ -26,15 +26,15 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-@Schema(description = "Contact Data Transfer Object representing a contact in the smart wallet application")
+@Schema(description = "Customer Data Transfer Object representing a contact in the smart wallet application")
 public abstract class CustomerDto {
-    @Schema(description = "Unique identifier of the contact", example = "1")
+    @Schema(description = "Unique identifier of the customer", example = "1")
     private Long id;
-    @Schema(description = "Name of the contact", example = "John")
+    @Schema(description = "Name of the customer", example = "Ed")
     private String name;
-    @Schema(description = "Email address of the contact", example = "a@gmail.com")
+    @Schema(description = "Email address of the customer", example = "a@gmail.com")
     private String email;
-    @Schema(description = "Phone number of the contact", example = "1234567890")
+    @Schema(description = "Phone number of the customer", example = "+905397251111")
     private String phoneNumber;
     private CustomerType type;
 

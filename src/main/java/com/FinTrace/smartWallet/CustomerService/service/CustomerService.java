@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CustomerService {
@@ -25,11 +26,11 @@ public class CustomerService {
         // Initialize some sample customers
         addCustomer(RealCustomer.builder()
                 .id(null)
-                .name("Alice")
+                .name("Ed")
                 .phoneNumber("5551234567")
                 .email("ed@gmail.com")
                 .type(CustomerType.REAL)
-                .family("Johnson")
+                .family("Din")
                 .build());
     }
 
@@ -39,24 +40,29 @@ public class CustomerService {
 
     public Customer updateCustomer(Long id, Customer updatedCustomer) {
         if (customerDao.existsById(id)) {
-            return customerDao.update(id, updatedCustomer);
+            updatedCustomer.setId(id);
+            return customerDao.save(updatedCustomer);
         }
         return null; // or throw an exception
     }
 
     public boolean deleteCustomer(Long id) {
         if (customerDao.existsById(id)) {
-            customerDao.delete(id);
+            customerDao.deleteById(id);
             return true;
         }
         return false; // or throw an exception
     }
 
-    public Customer getCustomerById(Long id) {
+    public Optional<Customer> getCustomerById(Long id) {
         return customerDao.findById(id);
     }
 
     public List<Customer> getAllCustomers() {
         return customerDao.findAll();
+    }
+
+    public List<Customer> findByName(String name) {
+        return customerDao.findByNameIgnoreCase(name);
     }
 }

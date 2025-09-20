@@ -24,7 +24,7 @@ public interface CustomerMapper {
         } else if (dto instanceof LegalCustomerDto) {
             return toEntity((LegalCustomerDto) dto);
         }
-        throw new IllegalArgumentException("Unknown ContactDto type: " + dto.getClass());
+        throw new IllegalArgumentException("Unknown customerDto type: " + dto.getClass());
     }
 
     default CustomerDto toDto(Customer entity) {
@@ -33,6 +33,6 @@ public interface CustomerMapper {
         } else if (entity instanceof LegalCustomer) {
             return toDto((LegalCustomer) entity);
         }
-        throw new IllegalArgumentException("Unknown Contact type: " + entity.getClass());
+        throw new IllegalArgumentException("Unknown customer type: " + entity.getClass());
     }
 }

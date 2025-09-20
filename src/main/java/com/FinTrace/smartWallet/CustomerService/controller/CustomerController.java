@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/contacts")
+@RequestMapping("/api/customers")
 public class CustomerController {
 
     private final CustomerFacade customerFacade;
@@ -33,21 +33,21 @@ public class CustomerController {
 
     // This is a simple controller class that handles HTTP requests
 
-    @Operation(summary = "Get all contacts", description = "Retrieve a list of all contacts")
+    @Operation(summary = "Get all customers", description = "Retrieve a list of all customers")
     @GetMapping
-    public List<CustomerDto> getAllContacts() {
+    public List<CustomerDto> getAllCustomers() {
         return customerFacade.getAllCustomers();
     }
 
-    @Operation(summary = "Get contact by ID", description = "Retrieve a contact by its unique identifier")
+    @Operation(summary = "Get customer by ID", description = "Retrieve a customer by its unique identifier")
     @GetMapping("/{id}")
-    public CustomerDto getContactById(@PathVariable Long id) {
+    public CustomerDto getCustomerById(@PathVariable Long id) {
         return customerFacade.getCustomerById(id);
     }
 
-    @Operation(summary = "Add a new contact", description = "Create a new contact in the phonebook")
+    @Operation(summary = "Add a new customer", description = "Create a new customer")
     @PostMapping
-    public CustomerDto addContact(
+    public CustomerDto addCustomer(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Contact object to be added",
                     required = true,
@@ -88,15 +88,15 @@ public class CustomerController {
                     )
 
             )
-            @RequestBody CustomerDto contact
+            @RequestBody CustomerDto customer
     ) {
-        return customerFacade.addCustomer(contact);
+        return customerFacade.addCustomer(customer);
     }
 
-    @Operation (summary = "Update a contact", description = "Update an existing contact")
+    @Operation (summary = "Update a customer", description = "Update an existing customer")
     @PutMapping("/{id}")
-    public CustomerDto updateContact(@PathVariable Long id,
-                                     @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    public CustomerDto updateCustomer(@PathVariable Long id,
+                                      @io.swagger.v3.oas.annotations.parameters.RequestBody(
                                              description = "Updated customer object",
                                              required = true,
                                              content = @Content(
