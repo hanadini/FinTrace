@@ -12,4 +12,6 @@ public interface CustomerDao {
     List<Customer> findAll();
     boolean existsById(Long id);
     List<Customer> findByNameIgnoreCase(String name);
+    boolean realCustomerExists(String name, String family);
+    boolean legalCustomerExists(String name);
 }

@@ -1,8 +1,11 @@
 package com.FinTrace.smartWallet.CustomerService.service;
 
 import com.FinTrace.smartWallet.CustomerService.dao.CustomerDao;
+import com.FinTrace.smartWallet.CustomerService.exception.CustomerNotFoundException;
+import com.FinTrace.smartWallet.CustomerService.exception.DuplicateCustomerException;
 import com.FinTrace.smartWallet.CustomerService.model.Customer;
 import com.FinTrace.smartWallet.CustomerService.model.CustomerType;
+import com.FinTrace.smartWallet.CustomerService.model.LegalCustomer;
 import com.FinTrace.smartWallet.CustomerService.model.RealCustomer;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,37 +24,31 @@ public class CustomerService {
         this.customerDao = customerDao;
     }
 
-    @PostConstruct
-    public void init() {
-        // Initialize some sample customers
-        addCustomer(RealCustomer.builder()
-                .id(null)
-                .name("Ed")
-                .phoneNumber("5551234567")
-                .email("ed@gmail.com")
-                .type(CustomerType.REAL)
-                .family("Din")
-                .build());
-    }
-
     public Customer addCustomer(Customer customer) {
+        if (customer instanceof RealCustomer &&
+                customerDao.realCustomerExists(customer.getName(), ((RealCustomer) customer).getFamily())) {
+            throw new DuplicateCustomerException("Customer with name " + customer.getName() + " and family " + ((RealCustomer) customer).getFamily() + " already exists.");
+        } else if (customer instanceof LegalCustomer &&
+                customerDao.legalCustomerExists(customer.getName())) {
+            throw new DuplicateCustomerException("Customer with name " + customer.getName() + " already exists.");
+        }
         return customerDao.save(customer);
     }
 
     public Customer updateCustomer(Long id, Customer updatedCustomer) {
         if (customerDao.existsById(id)) {
-            updatedCustomer.setId(id);
+            updatedCustomer.setId(id); // Ensure the ID is set for the update
             return customerDao.save(updatedCustomer);
         }
         return null; // or throw an exception
     }
 
-    public boolean deleteCustomer(Long id) {
+    public void deleteCustomer(Long id) {
         if (customerDao.existsById(id)) {
             customerDao.deleteById(id);
-            return true;
+        } else {
+            throw new CustomerNotFoundException("Customer not found with id: " + id);
         }
-        return false; // or throw an exception
     }
 
     public Optional<Customer> getCustomerById(Long id) {
@@ -63,6 +60,11 @@ public class CustomerService {
     }
 
     public List<Customer> findByName(String name) {
-        return customerDao.findByNameIgnoreCase(name);
+        List<Customer> byNameIgnoreCase = customerDao.findByNameIgnoreCase(name);
+        if (byNameIgnoreCase.isEmpty()) {
+            throw new CustomerNotFoundException("Customer not found with name: " + name);
+        }
+        return byNameIgnoreCase;
     }
+
 }

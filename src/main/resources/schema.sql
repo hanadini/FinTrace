@@ -8,7 +8,7 @@ CREATE TABLE customer (
 
 CREATE TABLE real_customer (
     id BIGINT PRIMARY KEY,
-    family VARCHAR(255),
+    family VARCHAR(255) NOT NULL,
     birth_date DATE,
     FOREIGN KEY (id) REFERENCES customer(id) ON DELETE CASCADE
 );

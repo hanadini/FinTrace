@@ -18,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 @PrimaryKeyJoinColumn(name = "id")
 @DiscriminatorValue( "LEGAL" )
 public class LegalCustomer extends Customer {
+
     private String businessAddress;
 
     public LegalCustomer() {

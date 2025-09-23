@@ -1,18 +1,26 @@
 package com.FinTrace.smartWallet.CustomerService.console;
 
 import com.FinTrace.smartWallet.CustomerService.dto.CustomerDto;
+import com.FinTrace.smartWallet.CustomerService.dto.FileType;
 import com.FinTrace.smartWallet.CustomerService.dto.LegalCustomerDto;
 import com.FinTrace.smartWallet.CustomerService.dto.RealCustomerDto;
+import com.FinTrace.smartWallet.CustomerService.exception.CustomerNotFoundException;
+import com.FinTrace.smartWallet.CustomerService.exception.DuplicateCustomerException;
 import com.FinTrace.smartWallet.CustomerService.facade.CustomerFacade;
 import com.FinTrace.smartWallet.CustomerService.model.CustomerType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 @Component
 @Profile("console")
@@ -38,36 +46,104 @@ public class ConsoleInterface {
             System.out.println("4. Update a customer");
             System.out.println("5. Delete a customer");
             System.out.println("6. Find a customer by Name");
+            System.out.println("7. Export customers to file");
+            System.out.println("8. Import customers from file");
             System.out.println("0. Exit");
             System.out.println("Enter your choice: ");
 
             int choice = Integer.parseInt(scanner.nextLine());
 
-            switch (choice) {
-                case 1 -> viewAllCustomers();
-                case 2 -> viewCustomerById();
-                case 3 -> addCustomer();
-                case 4 -> updateCustomer();
-                case 5 -> deleteCustomer();
-                case 6 -> findCustomerByName();
-                case 0 -> {
-                    System.out.println("Exiting...");
-                    return;
+            try {
+                switch (choice) {
+                    case 1 -> viewAllCustomers();
+                    case 2 -> viewCustomerById();
+                    case 3 -> addCustomer();
+                    case 4 -> updateCustomer();
+                    case 5 -> deleteCustomer();
+                    case 6 -> findCustomerByName();
+                    case 7 -> exportCustomersToFile();
+                    case 8 -> importCustomersFromFile();
+                    case 0 -> {
+                        System.out.println("Exiting...");
+                        return;
+                    }
+                    default -> System.out.println("Invalid choice. Please try again.");
                 }
-                default -> System.out.println("Invalid choice. Please try again.");
+            } catch (CustomerNotFoundException | DuplicateCustomerException e){
+                System.out.println(e.getMessage());
+            } catch (ConstraintViolationException ex){
+                String message = ex.getConstraintViolations().stream()
+                        .map(violation -> "Property: " + violation.getPropertyPath() + ", Message: " + violation.getMessage())
+                        .collect(Collectors.joining("\n "));
+                System.out.println("Validation error: " + message);
+            } catch (Exception e) {
+                System.out.println("An unexpected error occurred!");
             }
         }
     }
 
+    private void exportCustomersToFile() {
+        System.out.print("Enter file name to export: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter file type (JSON/BINARY): ");
+        String type = scanner.nextLine().toUpperCase();
+        FileType fileType = null;
+        String fileName = "";
+        if ("JSON".equals(type)) {
+            fileType = FileType.JSON;
+            fileName = name + ".json";
+        } else if ("BINARY".equals(type)) {
+            fileType = FileType.BINARY;
+            fileName = name + ".dat";
+        } else {
+            System.out.println("Invalid file type. Please choose JSON or BINARY.");
+        }
+        try {
+            byte[] fileContent = customerFacade.exportCustomers(fileType);
+            try (FileOutputStream fos = new FileOutputStream(fileName)) {
+                fos.write(fileContent);
+                System.out.println("Customers exported successfully");
+            } catch (IOException e) {
+                System.err.println("Error writing to file: " + e.getMessage());
+
+            }
+        } catch (IOException e) {
+            System.err.println("Error exporting customers: " + e.getMessage());
+        }
+    }
+
+    private void importCustomersFromFile() {
+        System.out.print("Enter file name to import: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter file type (JSON/BINARY): ");
+        String type = scanner.nextLine().toUpperCase();
+        FileType fileType = null;
+        String fileName = "";
+        if ("JSON".equals(type)) {
+            fileType = FileType.JSON;
+            fileName = name + ".json";
+        } else if ("BINARY".equals(type)) {
+            fileType = FileType.BINARY;
+            fileName = name + ".dat";
+        } else {
+            System.out.println("Invalid file type. Please choose JSON or BINARY.");
+        }
+        try {
+            byte[] fileContent = java.nio.file.Files.readAllBytes(Paths.get(fileName));
+            customerFacade.importCustomers(fileContent, fileType);
+            System.out.println("Customers imported successfully");
+        } catch (IOException e) {
+            System.err.println("Error reading from file: " + e.getMessage());
+        } catch (DuplicateCustomerException e) {
+            System.err.println("Error importing customers: " + e.getMessage());
+        }
+    }
+
     private void findCustomerByName() {
-        System.out.println("Enter customer name: ");
+        System.out.println("Enter customer name to search: ");
         String name = scanner.nextLine();
         List<CustomerDto> customers = customerFacade.getCustomersByName(name);
-        if (customers.isEmpty()) {
-            System.out.println("No customers found with the name: " + name);
-        } else {
-            customers.forEach(this::printJsonObject);
-        }
+        customers.forEach(this::printJsonObject);
     }
 
     private void viewAllCustomers() {
@@ -179,7 +255,7 @@ public class ConsoleInterface {
     private void deleteCustomer() {
         System.out.println("Enter customer ID to delete: ");
         Long id = Long.parseLong(scanner.nextLine());
-        boolean deleted = customerFacade.deleteCustomer(id);
-        System.out.println(deleted ? "Customer deleted successfully." : "Customer not found.");
+        customerFacade.deleteCustomer(id);
+        System.out.println("Customer deleted successfully.");
     }
 }

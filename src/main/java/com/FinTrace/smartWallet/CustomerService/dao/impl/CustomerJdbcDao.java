@@ -5,6 +5,9 @@ import com.FinTrace.smartWallet.CustomerService.model.Customer;
 import com.FinTrace.smartWallet.CustomerService.model.CustomerType;
 import com.FinTrace.smartWallet.CustomerService.model.LegalCustomer;
 import com.FinTrace.smartWallet.CustomerService.model.RealCustomer;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
@@ -13,10 +16,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import jakarta.validation.Validator;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @Primary
@@ -24,13 +29,19 @@ import java.util.Optional;
 public class CustomerJdbcDao implements CustomerDao {
 
     private final JdbcTemplate jdbc;
+    private final Validator validator;
 
     @Autowired
-    public CustomerJdbcDao(JdbcTemplate jdbc) {
+    public CustomerJdbcDao(JdbcTemplate jdbc, Validator validator) {
         this.jdbc = jdbc;
+        this.validator = validator;
     }
 
     public Customer save(Customer customer) {
+        Set<ConstraintViolation<Customer>> violations = validator.validate(customer);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
         if (existsById(customer.getId())) {
             return update(customer);
         } else {
@@ -57,8 +68,8 @@ public class CustomerJdbcDao implements CustomerDao {
             String realCustomerSql = "INSERT INTO real_customer (id, family) VALUES (?, ?)";
             jdbc.update(realCustomerSql, id, realCustomer.getFamily());
         } else if (customer instanceof LegalCustomer legalCustomer) {
-            String legalCustomerSql = "INSERT INTO legal_customer (id, email, businnes_address) VALUES (?, ?, ?)";
-            jdbc.update(legalCustomerSql, id, legalCustomer.getEmail(), legalCustomer.getBusinessAddress());
+            String legalCustomerSql = "INSERT INTO legal_customer (id, business_address) VALUES (?, ?)";
+            jdbc.update(legalCustomerSql, id, legalCustomer.getBusinessAddress());
         }
 
         return customer;
@@ -79,7 +90,11 @@ public class CustomerJdbcDao implements CustomerDao {
     }
 
     public void deleteById(Long id) {
-        String customerSql = "DELETE FROM customer WHERE id = ?";
+        String customerSql = "DELETE FROM real_customer WHERE id = ?";
+        jdbc.update(customerSql, id);
+        customerSql = "DELETE FROM legal_customer WHERE id = ?";
+        jdbc.update(customerSql, id);
+        customerSql = "DELETE FROM customer WHERE id = ?";
         jdbc.update(customerSql, id);
     }
 
@@ -115,7 +130,6 @@ public class CustomerJdbcDao implements CustomerDao {
                     .businessAddress((String) legalCustomerRow.get("businnes_address"))
                     .build();
         }
-
         return Optional.of(customer);
     }
 
@@ -186,6 +200,20 @@ public class CustomerJdbcDao implements CustomerDao {
                         .build();
             }
         });
+    }
+
+    @Override
+    public boolean realCustomerExists(String name, String family) {
+        String sql = "SELECT COUNT(*) FROM customer c JOIN real_customer rc ON c.id = rc.id WHERE LOWER(c.name) = LOWER(?) AND LOWER(rc.family) = LOWER(?)";
+        Integer count = jdbc.queryForObject(sql, Integer.class, name, family);
+        return count > 0;
+    }
+
+    @Override
+    public boolean legalCustomerExists(String name) {
+        String sql = "SELECT COUNT(*) FROM customer c JOIN legal_customer lc ON c.id = lc.id WHERE LOWER(c.name) = LOWER(?)";
+        Integer count = jdbc.queryForObject(sql, Integer.class, name);
+        return count > 0;
     }
 }
 

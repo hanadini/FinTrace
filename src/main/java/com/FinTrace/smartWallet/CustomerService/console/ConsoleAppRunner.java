@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 public class ConsoleAppRunner implements CommandLineRunner {
 
     private final ConsoleInterface consoleInterface;
+
     @Autowired
     public ConsoleAppRunner(ConsoleInterface consoleInterface) {
         this.consoleInterface = consoleInterface;

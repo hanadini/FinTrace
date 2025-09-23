@@ -1,12 +1,19 @@
 package com.FinTrace.smartWallet.CustomerService.dao.impl;
 import com.FinTrace.smartWallet.CustomerService.dao.CustomerDao;
 import com.FinTrace.smartWallet.CustomerService.model.Customer;
+import com.FinTrace.smartWallet.CustomerService.model.LegalCustomer;
+import com.FinTrace.smartWallet.CustomerService.model.RealCustomer;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,12 +22,18 @@ public class CustomerInMemoryDao implements CustomerDao {
 
     private final Map<Long, Customer> customers = new ConcurrentHashMap<>();
     private final AtomicLong currentId = new AtomicLong(0);
+    private final Validator validator;
 
-    @PostConstruct
-    public void init() {
+@Autowired
+    public CustomerInMemoryDao(Validator validator) {
+        this.validator = validator;
     }
 
     public Customer save(Customer customer) {
+        Set<ConstraintViolation<Customer>> violations = validator.validate(customer);
+        if(!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
         if(!existsById(customer.getId())) {
             Long id = currentId.incrementAndGet();
             customer.setId(id);
@@ -56,5 +69,20 @@ public class CustomerInMemoryDao implements CustomerDao {
         return customers.values().stream()
                 .filter(c -> c.getName() != null && c.getName().equalsIgnoreCase(name))
                 .toList();
+    }
+
+    @Override
+    public boolean realCustomerExists(String name, String family){
+        return customers.values().stream()
+                .anyMatch(customer -> customer instanceof RealCustomer realCustomer &&
+                        customer.getName() != null && customer.getName().equalsIgnoreCase(name) &&
+                        realCustomer.getFamily() != null && realCustomer.getFamily().equalsIgnoreCase(family));
+    }
+
+    @Override
+    public boolean legalCustomerExists(String name) {
+        return customers.values().stream()
+                .anyMatch(customer -> customer instanceof LegalCustomer legalCustomer &&
+                        customer.getName() != null && customer.getName().equalsIgnoreCase(name));
     }
 }
