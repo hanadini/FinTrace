@@ -4,10 +4,8 @@ import com.FinTrace.smartWallet.CustomerService.dao.CustomerDao;
 import com.FinTrace.smartWallet.CustomerService.exception.CustomerNotFoundException;
 import com.FinTrace.smartWallet.CustomerService.exception.DuplicateCustomerException;
 import com.FinTrace.smartWallet.CustomerService.model.Customer;
-import com.FinTrace.smartWallet.CustomerService.model.CustomerType;
 import com.FinTrace.smartWallet.CustomerService.model.LegalCustomer;
 import com.FinTrace.smartWallet.CustomerService.model.RealCustomer;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

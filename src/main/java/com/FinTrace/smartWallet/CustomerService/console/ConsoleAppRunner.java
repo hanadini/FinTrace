@@ -9,15 +9,15 @@ import org.springframework.stereotype.Component;
 @Profile("console")
 public class ConsoleAppRunner implements CommandLineRunner {
 
-    private final ConsoleInterface consoleInterface;
+    private final MainConsoleInterface mainConsoleInterface;
 
     @Autowired
-    public ConsoleAppRunner(ConsoleInterface consoleInterface) {
-        this.consoleInterface = consoleInterface;
+    public ConsoleAppRunner(MainConsoleInterface mainConsoleInterface) {
+        this.mainConsoleInterface = mainConsoleInterface;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        consoleInterface.start();
+        mainConsoleInterface.start();
     }
 }

@@ -13,11 +13,13 @@ import org.mapstruct.Mapper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface CustomerMapper {
+
     RealCustomer toEntity(RealCustomerDto dto);
 
     RealCustomerDto toDto(RealCustomer entity);
@@ -26,13 +28,13 @@ public interface CustomerMapper {
 
     LegalCustomerDto toDto(LegalCustomer entity);
 
-    default Customer toEntity(CustomerDto dto) {
+    default Customer toEntity(Object dto) {
         if (dto instanceof RealCustomerDto) {
             return toEntity((RealCustomerDto) dto);
         } else if (dto instanceof LegalCustomerDto) {
             return toEntity((LegalCustomerDto) dto);
         }
-        throw new IllegalArgumentException("Unknown customerDto type: " + dto.getClass());
+        throw new IllegalArgumentException("Unsupported DTO type: " + dto.getClass());
     }
 
     default CustomerDto toDto(Customer entity) {
@@ -41,7 +43,7 @@ public interface CustomerMapper {
         } else if (entity instanceof LegalCustomer) {
             return toDto((LegalCustomer) entity);
         }
-        throw new IllegalArgumentException("Unknown customer type: " + entity.getClass());
+        throw new IllegalArgumentException("Unsupported entity type: " + entity.getClass());
     }
 
     default byte[] toBytes(List<CustomerDto> customers) throws IOException {
@@ -52,33 +54,33 @@ public interface CustomerMapper {
         return baos.toByteArray();
     }
 
-    default void byteToDtos (byte[] fileContent) {
+    default List<CustomerDto> byteToDtos(byte[] fileContent) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(fileContent);
-             java.io.ObjectInputStream ois = new java.io.ObjectInputStream(bais)) {
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
             List<CustomerDto> customerDtos = (List<CustomerDto>) ois.readObject();
             for (CustomerDto customerDto : customerDtos) {
-                customerDto.setId(null);
+                customerDto.setId(null); // Reset ID for new entities
             }
+            return customerDtos;
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException("Failed to import customers", e);
         }
     }
 
-    default byte[] toJasonBytes(List<CustomerDto> customers) {
-        try{
+    default byte[] toJsonBytes(List<CustomerDto> customers){
+        try {
             return new ObjectMapper().writeValueAsBytes(customers);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to convert customers to JSON bytes", e);
         }
     }
 
-    default List<CustomerDto> jsonToDtos(byte[] fileContent) {
+    default List<CustomerDto> jsonToDtos(byte[] fileContent){
         try {
-            List<CustomerDto> customerDtos = new ObjectMapper().readValue(fileContent,
-                    new ObjectMapper().getTypeFactory()
-                            .constructCollectionType(List.class, CustomerDto.class));
+            List<CustomerDto> customerDtos = new ObjectMapper().readValue(fileContent, new ObjectMapper().getTypeFactory()
+                    .constructCollectionType(List.class, CustomerDto.class));
             for (CustomerDto customerDto : customerDtos) {
-                customerDto.setId(null);
+                customerDto.setId(null); // Reset ID for new entities
             }
             return customerDtos;
         } catch (IOException e) {

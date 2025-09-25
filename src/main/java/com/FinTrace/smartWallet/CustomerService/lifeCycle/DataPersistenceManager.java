@@ -3,6 +3,7 @@ package com.FinTrace.smartWallet.CustomerService.lifeCycle;
 import com.FinTrace.smartWallet.CustomerService.dto.FileType;
 import com.FinTrace.smartWallet.CustomerService.exception.DuplicateCustomerException;
 import com.FinTrace.smartWallet.CustomerService.facade.CustomerFacade;
+import com.FinTrace.smartWallet.CustomerService.facade.DepositFacade;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +19,21 @@ import java.nio.file.Files;
 @Profile("memory")
 public class DataPersistenceManager {
     private final CustomerFacade customerFacade;
+    private final DepositFacade depositFacade;
+
     private final FileType fileType = FileType.JSON;
 
-    @Value("${memo.fileName}")
-    private String fileName;
+    @Value("${memo.fileName.customer}")
+    private String customerFileName;
+
+    @Value("${memo.fileName.deposit}")
+    private String depositFileName;
+
 
     @Autowired
-    public DataPersistenceManager(CustomerFacade customerFacade) {
+    public DataPersistenceManager(CustomerFacade customerFacade, DepositFacade depositFacade) {
         this.customerFacade = customerFacade;
+        this.depositFacade = depositFacade;
     }
 
     @PostConstruct
@@ -46,22 +54,30 @@ public class DataPersistenceManager {
     private void exportCustomersToFile() {
         try {
             byte[] fileContent = customerFacade.exportCustomers(fileType);
-            try (FileOutputStream fos = new FileOutputStream(fileName)) {
-                fos.write(fileContent);
-                System.out.println("Customers exported successfully");
-            } catch (IOException e) {
-                System.err.println("Error writing to file: " + e.getMessage());
-
-            }
+            writeToFile(fileContent, customerFileName);
+            byte[] depositFileContent = depositFacade.exportDeposits(fileType);
+            writeToFile(depositFileContent, depositFileName);
         } catch (IOException e) {
             System.err.println("Error exporting customers: " + e.getMessage());
         }
     }
 
+    private void writeToFile(byte[] fileContent, String fileName) {
+        try (FileOutputStream fos = new FileOutputStream(fileName)) {
+            fos.write(fileContent);
+            System.out.println("Customers exported successfully");
+        } catch (IOException e) {
+            System.err.println("Error writing to file: " + e.getMessage());
+
+        }
+    }
+
     private void importCustomersFromFile() {
         try {
-            byte[] fileContent = Files.readAllBytes(java.nio.file.Paths.get(fileName));
+            byte[] fileContent = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(customerFileName));
             customerFacade.importCustomers(fileContent, fileType);
+            byte[] depositFileContent = java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(depositFileName));
+            depositFacade.importDeposits(depositFileContent, fileType);
             System.out.println("Customers imported successfully");
         } catch (IOException e) {
             System.err.println("Error reading from file: " + e.getMessage());

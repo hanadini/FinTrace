@@ -63,26 +63,25 @@ public class CustomerFacade {
 
     public byte[] exportCustomers(FileType fileType) throws IOException {
         List<CustomerDto> customers = getAllCustomers();
-        if(FileType.BINARY.equals(fileType)){
+        if(FileType.BINARY.equals(fileType)) {
             return mapper.toBytes(customers);
         } else {
-            return mapper.toJson(customers);
+            return mapper.toJsonBytes(customers);
         }
     }
 
-    public  void importCustomers(byte[] fileContent, FileType fileType){
+    public void importCustomers(byte[] fileContent, FileType fileType) {
         List<CustomerDto> customers;
-        if(FileType.BINARY.equals(fileType)){
+        if(FileType.BINARY.equals(fileType)) {
             customers = mapper.byteToDtos(fileContent);
         } else {
             customers = mapper.jsonToDtos(fileContent);
         }
         for (CustomerDto customer : customers) {
-            try {
+            try{
                 addCustomer(customer);
             } catch (Exception e) {
-                // Log the exception and continue with the next customer
-                System.err.println("Failed to import customer: " + customer + ". Error: " + e.getMessage());
+                System.err.println("Failed to add customer: " + customer + " due to " + e.getMessage());
             }
         }
     }
