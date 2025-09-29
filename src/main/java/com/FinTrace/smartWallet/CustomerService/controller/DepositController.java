@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -30,12 +31,12 @@ public class DepositController {
     }
 
     @PutMapping("/{id}/deposit")
-    public DepositDto depositAmount(@PathVariable Long id, @RequestParam double amount) {
+    public DepositDto depositAmount(@PathVariable Long id, @RequestParam BigDecimal amount) {
         return depositFacade.depositAmount(id, amount);
     }
 
     @PutMapping("/{id}/withdraw")
-    public DepositDto withdrawAmount(@PathVariable Long id, @RequestParam double amount) {
+    public DepositDto withdrawAmount(@PathVariable Long id, @RequestParam BigDecimal amount) {
         return depositFacade.withdrawAmount(id, amount);
     }
 

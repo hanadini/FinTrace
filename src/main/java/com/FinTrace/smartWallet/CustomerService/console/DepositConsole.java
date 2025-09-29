@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -90,7 +91,7 @@ public class DepositConsole extends BaseConsole {
         System.out.print("Enter deposit ID to withdraw money: ");
         Long depositId = Long.parseLong(scanner.nextLine());
         System.out.print("Enter amount to withdraw: ");
-        Double amount = Double.parseDouble(scanner.nextLine());
+        BigDecimal amount = new BigDecimal(scanner.nextLine());
         try {
             depositFacade.withdrawAmount(depositId, amount);
             System.out.println("Money withdrawn successfully.");
@@ -105,7 +106,7 @@ public class DepositConsole extends BaseConsole {
         System.out.print("Enter deposit ID to deposit money: ");
         Long depositId = Long.parseLong(scanner.nextLine());
         System.out.print("Enter amount to deposit: ");
-        Double amount = Double.parseDouble(scanner.nextLine());
+        BigDecimal amount = new BigDecimal(scanner.nextLine());
         try {
             depositFacade.depositAmount(depositId, amount);
             System.out.println("Money deposited successfully.");

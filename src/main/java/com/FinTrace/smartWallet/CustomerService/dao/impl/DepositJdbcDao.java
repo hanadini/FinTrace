@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
@@ -16,8 +17,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-@Profile( "jdbc" )
+@Profile("jdbc")
 public class DepositJdbcDao implements DepositDao {
+
     private final JdbcTemplate jdbc;
     private final CustomerDao customerDao;
 
@@ -30,19 +32,26 @@ public class DepositJdbcDao implements DepositDao {
     @Override
     public Deposit save(Deposit deposit) {
         if (deposit.getId() == null) {
-            String sql = "INSERT INTO deposit (amount, customer_id) VALUES (?, ?)";
+            String sql = "INSERT INTO deposit (amount, customer_id, version) VALUES (?, ?, 0)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbc.update(connection -> {
                 PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
-                ps.setDouble(1, deposit.getAmount());
+                ps.setBigDecimal(1, deposit.getAmount());
                 ps.setLong(2, deposit.getCustomer().getId());
                 return ps;
             }, keyHolder);
             Long id = keyHolder.getKey().longValue();
             deposit.setId(id);
+            deposit.setVersion(0L); // Initialize version to 0 for new deposits
         } else {
-            String sql = "UPDATE deposit SET amount = ?, customer_id = ? WHERE id = ?";
-            jdbc.update(sql, deposit.getAmount(), deposit.getCustomer().getId(), deposit.getId());
+            String sql = "UPDATE deposit SET amount = ?, customer_id = ?, version = version + 1 WHERE id = ? and version = ?";
+            int update = jdbc.update(sql, deposit.getAmount(), deposit.getCustomer().getId(), deposit.getId(), deposit.getVersion());
+            if (update == 0) {
+                throw new ObjectOptimisticLockingFailureException(
+                        "Deposit with id " + deposit.getId() + " was updated by another transaction.",
+                        Deposit.class);
+            }
+            deposit.setVersion(deposit.getVersion() + 1); // Increment version after successful update
         }
         return deposit; // In a real implementation, you would return the updated deposit with its ID
     }
@@ -53,7 +62,8 @@ public class DepositJdbcDao implements DepositDao {
         List<Deposit> deposits = jdbc.query(sql, (rs, rowNum) -> {
             Deposit deposit = new Deposit();
             deposit.setId(rs.getLong("id"));
-            deposit.setAmount(rs.getDouble("amount"));
+            deposit.setAmount(rs.getBigDecimal("amount"));
+            deposit.setVersion(rs.getLong("version"));
             Long customerId = rs.getLong("customer_id");
             deposit.setCustomer(customerDao.findById(customerId)
                     .orElseThrow(() -> new CustomerNotFoundException("Customer with id " + customerId + " does not exist.")));
@@ -74,7 +84,8 @@ public class DepositJdbcDao implements DepositDao {
         return jdbc.query(sql, (rs, rowNum) -> {
             Deposit deposit = new Deposit();
             deposit.setId(rs.getLong("id"));
-            deposit.setAmount(rs.getDouble("amount"));
+            deposit.setAmount(rs.getBigDecimal("amount"));
+            deposit.setVersion(rs.getLong("version"));
             Long customerId = rs.getLong("customer_id");
             deposit.setCustomer(customerDao.findById(customerId)
                     .orElseThrow(() -> new CustomerNotFoundException("Customer with id " + customerId + " does not exist.")));
@@ -88,12 +99,12 @@ public class DepositJdbcDao implements DepositDao {
         return jdbc.query(sql, (rs, rowNum) -> {
             Deposit deposit = new Deposit();
             deposit.setId(rs.getLong("id"));
-            deposit.setAmount(rs.getDouble("amount"));
+            deposit.setAmount(rs.getBigDecimal("amount"));
+            deposit.setVersion(rs.getLong("version"));
             Long customerId = rs.getLong("customer_id");
             deposit.setCustomer(customerDao.findById(customerId)
                     .orElseThrow(() -> new CustomerNotFoundException("Customer with id " + customerId + " does not exist.")));
             return deposit;
         });
     }
-
 }

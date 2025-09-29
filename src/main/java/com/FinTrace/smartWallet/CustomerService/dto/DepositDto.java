@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,6 +15,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class DepositDto {
     private Long id;
-    private Double amount;
+    private BigDecimal amount;
     private CustomerDto customer;
 }

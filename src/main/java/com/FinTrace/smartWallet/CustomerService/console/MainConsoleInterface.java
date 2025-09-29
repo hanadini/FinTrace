@@ -49,7 +49,8 @@ public class MainConsoleInterface {
                 System.out.println(e.getMessage());
             } catch (ConstraintViolationException ex) {
                 String message = ex.getConstraintViolations().stream()
-                        .map(violation -> "Property: " + violation.getPropertyPath() + ", Message: " + violation.getMessage())
+                        .map(violation -> "Property: " + violation.getPropertyPath() + ", Message: "
+                                + violation.getMessage())
                         .collect(Collectors.joining("\n "));
                 System.out.println("Validation error: " + message);
             } catch (Exception e) {

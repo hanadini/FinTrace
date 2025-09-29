@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -26,11 +27,11 @@ public class DepositFacade {
         return mapper.toDto(depositService.addDeposit(customerId));
     }
 
-    public DepositDto depositAmount(Long id, Double amount) {
+    public DepositDto depositAmount(Long id, BigDecimal amount) {
         return mapper.toDto(depositService.depositAmount(id, amount));
     }
 
-    public DepositDto withdrawAmount(Long id, Double amount) {
+    public DepositDto withdrawAmount(Long id, BigDecimal amount) {
         return mapper.toDto(depositService.withdrawAmount(id, amount));
     }
 

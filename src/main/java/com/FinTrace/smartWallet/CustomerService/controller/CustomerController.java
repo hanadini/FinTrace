@@ -212,17 +212,18 @@ public class CustomerController {
 
     @Operation(summary = "Export customers", description = "Export all customers to a file")
     @GetMapping("/export")
-    public ResponseEntity<byte[]> exportCustomers(FileType fileType) throws IOException {
-        byte[] fileContent = customerFacade.exportCustomers(fileType );
+    public ResponseEntity<byte[]> exportCustomers(@RequestParam FileType fileType) throws IOException {
+        byte[] fileContent = customerFacade.exportCustomers(fileType);
         String name;
-        if(FileType.BINARY.equals((fileType))){
+        if(FileType.BINARY.equals(fileType)) {
             name = "customers.dat";
         } else {
             name = "customers.json";
         }
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=customers.dat")
-                .contentType( MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition",
+                        "attachment; filename=" + name)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(fileContent);
     }
 
@@ -235,5 +236,4 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body("Customers imported successfully");
     }
-
 }

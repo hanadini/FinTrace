@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @SpringBootTest
@@ -42,13 +43,13 @@ public class DepositJdbcDaoIntegrationTest {
         customer.setEmail("a@gmail.com");
         customer = (LegalCustomer) customerJdbcDao.save(customer);
         Deposit deposit = new Deposit();
-        deposit.setAmount(1000.0);
+        deposit.setAmount(BigDecimal.valueOf(1000.0));
         deposit.setCustomer(customer);
         deposit = depositJdbcDao.save(deposit);
         Deposit foundDeposit = depositJdbcDao.findById(deposit.getId())
                 .orElseThrow(() -> new RuntimeException("Deposit not found"));
         assert foundDeposit != null;
-        assert foundDeposit.getAmount() == 1000.0;
+        assert foundDeposit.getAmount().compareTo(BigDecimal.valueOf(1000.0))==0 ;
         assert foundDeposit.getCustomer().getId().equals(customer.getId());
         assert foundDeposit.getCustomer().getName().equals("Test Company");
         assert foundDeposit.getCustomer().getPhoneNumber().equals("1234567890");
@@ -57,7 +58,7 @@ public class DepositJdbcDaoIntegrationTest {
     @Test
     void deleteById(){
         Deposit deposit = new Deposit();
-        deposit.setAmount(500.0);
+        deposit.setAmount(BigDecimal.valueOf(500.0));
         LegalCustomer customer = new LegalCustomer();
         customer.setName("Test Company");
         customer.setPhoneNumber("1234567890");
@@ -81,7 +82,7 @@ public class DepositJdbcDaoIntegrationTest {
         customer = (LegalCustomer) customerJdbcDao.save(customer);
 
         Deposit deposit = new Deposit();
-        deposit.setAmount(2000.0);
+        deposit.setAmount(BigDecimal.valueOf(2000.0));
         deposit.setCustomer(customer);
         deposit = depositJdbcDao.save(deposit);
 
@@ -89,7 +90,7 @@ public class DepositJdbcDaoIntegrationTest {
 
         var deposits = depositJdbcDao.findByCustomerId(customer.getId());
         assert !deposits.isEmpty() : "Deposits should not be empty for the given customer ID";
-        assert deposits.get(0).getAmount() == 2000.0 : "Deposit amount should match the saved amount";
+        assert deposits.get(0).getAmount().compareTo(BigDecimal.valueOf(2000.0))==0 : "Deposit amount should match the saved amount";
     }
 
     @Test
@@ -108,12 +109,12 @@ public class DepositJdbcDaoIntegrationTest {
         customer2 = (LegalCustomer) customerJdbcDao.save(customer2);
 
         Deposit deposit1 = new Deposit();
-        deposit1.setAmount(3000.0);
+        deposit1.setAmount(BigDecimal.valueOf(3000.0));
         deposit1.setCustomer(customer1);
         depositJdbcDao.save(deposit1);
 
         Deposit deposit2 = new Deposit();
-        deposit2.setAmount(4000.0);
+        deposit2.setAmount(BigDecimal.valueOf(4000.0));
         deposit2.setCustomer(customer2);
         depositJdbcDao.save(deposit2);
 
@@ -131,20 +132,20 @@ public class DepositJdbcDaoIntegrationTest {
         customer = (LegalCustomer) customerJdbcDao.save(customer);
 
         Deposit deposit = new Deposit();
-        deposit.setAmount(1500.0);
+        deposit.setAmount(BigDecimal.valueOf(1500.0));
         deposit.setCustomer(customer);
         deposit = depositJdbcDao.save(deposit);
 
         assert deposit.getId() != null : "Deposit ID should not be null after saving";
 
         // Update the deposit amount
-        deposit.setAmount(2000.0);
+        deposit.setAmount(BigDecimal.valueOf(2000.0));
         deposit = depositJdbcDao.save(deposit);
 
         Deposit updatedDeposit = depositJdbcDao.findById(deposit.getId())
                 .orElseThrow(() -> new RuntimeException("Updated Deposit not found"));
 
-        assert updatedDeposit.getAmount() == 2000.0 : "Updated amount should be 2000.0";
+        assert updatedDeposit.getAmount().compareTo(BigDecimal.valueOf(2000.0))==0 : "Updated amount should be 2000.0";
     }
 
 }

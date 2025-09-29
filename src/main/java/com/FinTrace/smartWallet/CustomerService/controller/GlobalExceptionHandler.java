@@ -2,7 +2,9 @@ package com.FinTrace.smartWallet.CustomerService.controller;
 
 import com.FinTrace.smartWallet.CustomerService.dto.ErrorResponse;
 import com.FinTrace.smartWallet.CustomerService.exception.CustomerNotFoundException;
+import com.FinTrace.smartWallet.CustomerService.exception.DepositNotFoundException;
 import com.FinTrace.smartWallet.CustomerService.exception.DuplicateCustomerException;
+import com.FinTrace.smartWallet.CustomerService.exception.InsufficientFundException;
 import jakarta.validation.ConstraintViolationException;
 import org.hibernate.PropertyValueException;
 import org.springframework.http.HttpStatus;
@@ -17,11 +19,26 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(CustomerNotFoundException.class)
+
+    @ExceptionHandler(value = CustomerNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCustomerNotFoundException(CustomerNotFoundException ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
                 ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(value = DepositNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDepositNotFoundException(DepositNotFoundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND.value(),
+                ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(value = InsufficientFundException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DuplicateCustomerException.class)
@@ -82,7 +99,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Throwable.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Throwable ex) {
+    public ResponseEntity<ErrorResponse> handleGlobalException(Throwable ex) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred: " + ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
