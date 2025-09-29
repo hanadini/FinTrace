@@ -2,6 +2,8 @@ package com.FinTrace.smartWallet.CustomerService.model;
 
 import com.FinTrace.smartWallet.CustomerService.mapper.CustomerMapper;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -36,4 +38,7 @@ public class Deposit {
 
     @Version
     private Long version;
+
+    @Enumerated(EnumType.STRING)
+    private Currency currency;
 }

@@ -15,4 +15,5 @@ public interface DepositDao {
     List<Deposit> findByCustomerId(Long id);
 
     List<Deposit> findAll();
+    void flush();
 }

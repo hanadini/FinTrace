@@ -1,9 +1,8 @@
-CREATE TABLE  IF NOT EXISTS customer (
+CREATE TABLE IF NOT EXISTS customer (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(20),
-    email VARCHAR(255),
-    type VARCHAR(10) -- 'REAL' or 'LEGAL'
+    type VARCHAR(10)
 );
 
 CREATE TABLE IF NOT EXISTS real_customer (
@@ -20,7 +19,9 @@ CREATE TABLE IF NOT EXISTS legal_customer (
 
 CREATE TABLE IF NOT EXISTS deposit (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    amount NUMERIC NOT NULL,
+    amount NUMERIC(38, 2) NOT NULL,
     customer_id BIGINT NOT NULL,
+    version BIGINT NOT NULL,
+    currency ENUM('EUR', 'USD'),
     FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
 );

@@ -11,6 +11,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import com.FinTrace.smartWallet.CustomerService.model.Currency;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,6 +37,7 @@ public class DepositConsole extends BaseConsole {
             System.out.println("2. Deposit amount to deposit");
             System.out.println("3. Withdraw amount from deposit");
             System.out.println("4. Show deposits by customer ID");
+            System.out.println("5. Transfer amount between deposits");
             System.out.println("0. Back to main menu");
             System.out.print("Enter your choice: ");
 
@@ -47,6 +49,7 @@ public class DepositConsole extends BaseConsole {
                     case 2 -> depositMoneyToDeposit();
                     case 3 -> withdrawMoneyFromDeposit();
                     case 4 -> listDepositsForCustomer();
+                    case 5 -> TransferAmountBetweenDeposits();
                     case 0 -> {
                         return;
                     }
@@ -63,6 +66,24 @@ public class DepositConsole extends BaseConsole {
                 System.out.println("An unexpected error occurred!");
             }
 
+        }
+    }
+
+    private void TransferAmountBetweenDeposits() {
+        System.out.print("Enter source deposit ID: ");
+        Long fromDepositId = Long.parseLong(scanner.nextLine());
+        System.out.print("Enter target deposit ID: ");
+        Long toDepositId = Long.parseLong(scanner.nextLine());
+        System.out.print("Enter amount to transfer: ");
+        BigDecimal amount = new BigDecimal(scanner.nextLine());
+
+        try {
+            depositFacade.transferAmount(fromDepositId, toDepositId, amount);
+            System.out.println("Transfer completed successfully.");
+        } catch (CustomerNotFoundException e) {
+            System.out.println(e.getMessage());
+        } catch (InsufficientFundException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -116,10 +137,14 @@ public class DepositConsole extends BaseConsole {
     }
 
     private void createDepositForCustomer() {
+        System.out.print("Enter deposit currency (e.g., USD, EUR): ");
+        String currencyStr = scanner.nextLine().toUpperCase();
+        Currency currency = Currency.valueOf(currencyStr);
+
         System.out.print("Enter customer ID to create deposit: ");
         Long customerId = Long.parseLong(scanner.nextLine());
         try {
-            depositFacade.addDeposit(customerId);
+            depositFacade.addDeposit(customerId, currency);
             System.out.println("Deposit created successfully.");
         } catch (CustomerNotFoundException e) {
             System.out.println(e.getMessage());

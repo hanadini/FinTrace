@@ -3,6 +3,7 @@ package com.FinTrace.smartWallet.CustomerService.dao.impl;
 import com.FinTrace.smartWallet.CustomerService.dao.CustomerDao;
 import com.FinTrace.smartWallet.CustomerService.dao.DepositDao;
 import com.FinTrace.smartWallet.CustomerService.exception.CustomerNotFoundException;
+import com.FinTrace.smartWallet.CustomerService.model.Currency;
 import com.FinTrace.smartWallet.CustomerService.model.Deposit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -13,6 +14,8 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -106,5 +109,17 @@ public class DepositJdbcDao implements DepositDao {
                     .orElseThrow(() -> new CustomerNotFoundException("Customer with id " + customerId + " does not exist.")));
             return deposit;
         });
+    }
+    @Override
+    public void flush() {
+    }
+
+    public static Deposit getDeposit(ResultSet rs) throws SQLException {
+        Deposit deposit = new Deposit();
+        deposit.setId(rs.getLong("id"));
+        deposit.setAmount(rs.getBigDecimal("amount"));
+        deposit.setVersion(rs.getLong("version"));
+        deposit.setCurrency(Currency.valueOf(rs.getString("currency")));
+        return deposit;
     }
 }

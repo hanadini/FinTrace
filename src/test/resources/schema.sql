@@ -22,5 +22,6 @@ CREATE TABLE IF NOT EXISTS deposit (
     amount DOUBLE NOT NULL,
     customer_id BIGINT NOT NULL,
     version BIGINT NOT NULL,
+    currency ENUM('EUR', 'USD'),
     FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
 );

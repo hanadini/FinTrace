@@ -3,6 +3,7 @@ package com.FinTrace.smartWallet.CustomerService.facade;
 import com.FinTrace.smartWallet.CustomerService.dto.DepositDto;
 import com.FinTrace.smartWallet.CustomerService.dto.FileType;
 import com.FinTrace.smartWallet.CustomerService.mapper.DepositMapper;
+import com.FinTrace.smartWallet.CustomerService.model.Currency;
 import com.FinTrace.smartWallet.CustomerService.model.Deposit;
 import com.FinTrace.smartWallet.CustomerService.service.DepositService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,8 @@ public class DepositFacade {
         this.depositService = depositService;
     }
 
-    public DepositDto addDeposit(Long customerId) {
-        return mapper.toDto(depositService.addDeposit(customerId));
+    public DepositDto addDeposit(Long customerId, Currency currency) {
+        return mapper.toDto(depositService.addDeposit(customerId, currency));
     }
 
     public DepositDto depositAmount(Long id, BigDecimal amount) {
@@ -82,5 +83,9 @@ public class DepositFacade {
                 System.err.println("Failed to add deposit: " + deposit + " due to " + e.getMessage());
             }
         }
+    }
+
+    public void transferAmount(Long sourceId, Long targetId, BigDecimal amount) {
+        depositService.transferAmount(sourceId, targetId, amount);
     }
 }

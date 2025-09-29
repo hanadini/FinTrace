@@ -60,12 +60,12 @@ public class DepositInMemoryDao implements DepositDao {
     public Optional<Deposit> findById(Long id) {
         Deposit deposit = deposits.get(id);
         if (deposit == null) return Optional.empty();
-        if(TransactionSynchronizationManager.isActualTransactionActive()) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
             Deposit snapshot = deepCopy(deposit);
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCompletion(int status) {
-                    if(status == STATUS_ROLLED_BACK) {
+                    if (status == STATUS_ROLLED_BACK) {
                         deposits.put(id, snapshot);
                     }
                 }
@@ -106,5 +106,9 @@ public class DepositInMemoryDao implements DepositDao {
         return deposits.values().stream()
                 .map(this::deepCopy)
                 .toList();
+    }
+
+    @Override
+    public void flush() {
     }
 }

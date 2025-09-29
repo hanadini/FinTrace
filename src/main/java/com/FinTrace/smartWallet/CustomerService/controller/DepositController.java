@@ -2,6 +2,7 @@ package com.FinTrace.smartWallet.CustomerService.controller;
 
 import com.FinTrace.smartWallet.CustomerService.dto.DepositDto;
 import com.FinTrace.smartWallet.CustomerService.facade.DepositFacade;
+import com.FinTrace.smartWallet.CustomerService.model.Currency;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +27,8 @@ public class DepositController {
     }
 
     @PostMapping("/customer/{customerId}/new")
-    public DepositDto addDeposit(Long customerId) {
-        return depositFacade.addDeposit(customerId);
+    public DepositDto addDeposit(Long customerId, @RequestParam Currency currency) {
+        return depositFacade.addDeposit(customerId, currency);
     }
 
     @PutMapping("/{id}/deposit")
@@ -48,5 +49,11 @@ public class DepositController {
     @DeleteMapping("/{id}")
     public void deleteDeposit(@PathVariable Long id) {
         depositFacade.deleteDeposit(id);
+    }
+
+    @PutMapping("/{fromDepositId}/transfer/{toDepositId}")
+    public void transferAmount(@PathVariable Long fromDepositId, @PathVariable Long toDepositId,
+                               @RequestParam BigDecimal amount) {
+        depositFacade.transferAmount(fromDepositId, toDepositId, amount);
     }
 }
